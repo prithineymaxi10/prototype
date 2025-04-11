@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Data Visualization Tool</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet"/>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(270deg, #a18cd1, #fbc2eb, #84fab0, #8fd3f4);
+      background-size: 800% 800%;
+      animation: backgroundShift 20s ease infinite, fadeIn 1.2s ease-in;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      padding: 20px;
+    }
+
+    @keyframes backgroundShift {
+      0% {background-position: 0% 50%;}
+      50% {background-position: 100% 50%;}
+      100% {background-position: 0% 50%;}
+    }
+
+    @keyframes fadeIn {
+      0% {opacity: 0;}
+      100% {opacity: 1;}
+    }
+
+    .container {
+      background: #ffffffcc;
+      padding: 40px 30px;
+      border-radius: 16px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+      max-width: 520px;
+      width: 100%;
+      text-align: center;
+      backdrop-filter: blur(5px);
+    }
+
+    h2 {
+      margin-bottom: 20px;
+      color: #2c3e50;
+      font-size: 26px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+      text-align: left;
+    }
+
+    label {
+      font-weight: 600;
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    input, select, button {
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+    }
+
+    button {
+      background-color: #007bff;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      border: none;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    .chart-container {
+      margin-top: 20px;
+    }
+
+    img {
+      width: 100%;
+      max-width: 400px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+      cursor: pointer;
+      transition: transform 0.3s ease;
+    }
+
+    img:hover {
+      transform: scale(1.05);
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.8);
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-content {
+      max-width: 90%;
+      max-height: 90%;
+    }
+
+    .close {
+      position: absolute;
+      top: 20px;
+      right: 30px;
+      font-size: 30px;
+      color: white;
+      cursor: pointer;
+    }
+
+    .download-btn {
+      margin-top: 10px;
+      background-color: #28a745;
+    }
+
+    .download-btn:hover {
+      background-color: #218838;
+    }
+
+    .footer {
+      margin-top: 30px;
+      font-size: 14px;
+      color: #555;
+    }
+
+    .spinner-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100vh;
+      width: 100vw;
+      background: rgba(255, 255, 255, 0.8);
+      justify-content: center;
+      align-items: center;
+      z-index: 2000;
+    }
+
+    .spinner {
+      border: 6px solid #f3f3f3;
+      border-top: 6px solid #007bff;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="spinner-overlay" id="spinner">
+    <div class="spinner"></div>
+  </div>
+
+  <div class="container">
+    <h2>Upload File & Generate Visualization</h2>
+    <form id="uploadForm" action="/" method="POST" enctype="multipart/form-data">
+      <div class="form-group">
+        <label for="file">Select File (CSV or PDF):</label>
+        <input type="file" name="file" id="file" required>
+      </div>
+
+      <div class="form-group">
+        <label for="chart_type">Choose Chart Type:</label>
+        <select name="chart_type" id="chart_type">
+          <option value="bar">Bar Chart</option>
+          <option value="line">Line Chart</option>
+          <option value="pie">Pie Chart</option>
+          
+          <option value="scatter">Scatter Plot</option>
+        </select>
+      </div>
+
+      <button type="submit">Generate Chart</button>
+    </form>
+
+    {% if chart %}
+      <div class="chart-container">
+        <h3>Generated Chart:</h3>
+        <img id="chartImage" src="{{ url_for('static', filename='uploads/chart.png') }}" alt="Generated Chart" onclick="openModal()">
+        <button class="download-btn" onclick="downloadChart()">Download Chart</button>
+      </div>
+    {% endif %}
+  </div>
+
+  <div id="chartModal" class="modal">
+    <span class="close" onclick="closeModal()">&times;</span>
+    <img class="modal-content" id="modalImg">
+  </div>
+
+  <div class="footer">
+    &copy; 2025 Data Visualization Tool | Designed for User Convenience
+  </div>
+
+  <script>
+    function openModal() {
+      var modal = document.getElementById("chartModal");
+      var modalImg = document.getElementById("modalImg");
+      var chartImg = document.getElementById("chartImage");
+      modal.style.display = "flex";
+      modalImg.src = chartImg.src;
+    }
+
+    function closeModal() {
+      document.getElementById("chartModal").style.display = "none";
+    }
+
+    function downloadChart() {
+      var chartImg = document.getElementById("chartImage").src;
+      var link = document.createElement("a");
+      link.href = chartImg;
+      link.download = "chart.png";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    document.getElementById("uploadForm").addEventListener("submit", function () {
+      document.getElementById("spinner").style.display = "flex";
+    });
+  </script>
+
+</body>
+</html>

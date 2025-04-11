@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Smart Task Manager</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      animation: bgCycle 20s infinite alternate;
+      transition: background 0.3s, color 0.3s;
+    }
+    @keyframes bgCycle {
+      0% { background-color: #fce4ec; }
+      33% { background-color: #e3f2fd; }
+      66% { background-color: #e8f5e9; }
+      100% { background-color: #fff3e0; }
+    }
+    .card {
+      background-color: #ffffffee;
+      border-radius: 1rem;
+    }
+    .kanban-board {
+      display: flex;
+      gap: 1rem;
+      overflow-x: auto;
+    }
+    .kanban-column {
+      flex: 1;
+      background: #f5f5f5;
+      padding: 10px;
+      border-radius: 12px;
+      min-width: 300px;
+    }
+    .kanban-column h5 {
+      text-align: center;
+      font-weight: bold;
+    }
+    .task-card {
+      color: #fff;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 8px;
+      animation: fadeIn 0.5s ease-in-out;
+    }
+    .toast-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1055;
+    }
+    .btn-dashboard {
+      position: fixed;
+      top: 15px;
+      right: 20px;
+      z-index: 1000;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+<button class="btn btn-dark btn-dashboard" onclick="window.location.href='/dashboard'">
+  <i class="fas fa-th-large me-1"></i> Access the Dashboard
+</button>
+
+<div class="container mt-5">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-chart-line me-2"></i> Smart Task Dashboard</h2>
+  </div>
+
+  <div class="card p-4 mb-4">
+    <form id="taskForm">
+      <div class="row g-3">
+        <div class="col-md-2"><input type="text" id="taskName" class="form-control" placeholder="Task Name" required /></div>
+        <div class="col-md-2"><input type="text" id="taskDesc" class="form-control" placeholder="Description" /></div>
+        <div class="col-md-2"><input type="date" id="taskDate" class="form-control" required /></div>
+        <div class="col-md-2"><input type="time" id="startTime" class="form-control" required /></div>
+        <div class="col-md-2"><input type="time" id="endTime" class="form-control" required /></div>
+        <div class="col-md-2"><select id="taskPriority" class="form-select" required>
+          <option value="Low">Low</option><option value="Medium" selected>Medium</option><option value="High">High</option>
+        </select></div>
+        <div class="col-md-2"><select id="taskStatus" class="form-select" required>
+          <option value="Assigned">Assigned</option><option value="In Process">In Process</option><option value="Completed">Completed</option>
+        </select></div>
+        <div class="col-md-2 d-grid">
+          <button type="button" class="btn btn-primary" onclick="addTask()">
+            <i class="fas fa-plus-circle"></i> Add Task
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <div class="d-flex gap-2 mb-3">
+    <select id="filterPriority" class="form-select w-auto" onchange="fetchTasks()">
+      <option value="">Filter by Priority</option>
+      <option value="Low">Low</option><option value="Medium">Medium</option><option value="High">High</option>
+    </select>
+    <select id="filterStatus" class="form-select w-auto" onchange="fetchTasks()">
+      <option value="">Filter by Status</option>
+      <option value="Assigned">Assigned</option><option value="In Process">In Process</option><option value="Completed">Completed</option>
+    </select>
+  </div>
+
+  <div class="kanban-board mb-4">
+    <div class="kanban-column" id="Assigned"><h5>Assigned</h5></div>
+    <div class="kanban-column" id="In Process"><h5>In Process</h5></div>
+    <div class="kanban-column" id="Completed"><h5>Completed</h5></div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+<script>
+  let tasks = [];
+
+  function toast(message, type = 'success') {
+    const toastId = `toast-${Date.now()}`;
+    const toastHTML = `
+      <div id="${toastId}" class="toast align-items-center text-bg-${type} border-0 show mb-2" role="alert">
+        <div class="d-flex">
+          <div class="toast-body">${message}</div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" onclick="document.getElementById('${toastId}').remove();"></button>
+        </div>
+      </div>`;
+    document.getElementById('toastContainer').insertAdjacentHTML('beforeend', toastHTML);
+    setTimeout(() => document.getElementById(toastId)?.remove(), 4000);
+  }
+
+  function fetchTasks() {
+    const priorityFilter = document.getElementById('filterPriority').value;
+    const statusFilter = document.getElementById('filterStatus').value;
+
+    fetch('/get_tasks')
+      .then(res => res.json())
+      .then(data => {
+        tasks = data;
+        renderTasks(priorityFilter, statusFilter);
+      });
+  }
+
+  function getStatusColor(status) {
+    switch (status) {
+      case 'Assigned': return '#007bff';
+      case 'In Process': return '#ffc107';
+      case 'Completed': return '#28a745';
+      default: return '#6c757d';
+    }
+  }
+
+  function renderTasks(priorityFilter = '', statusFilter = '') {
+    ['Assigned', 'In Process', 'Completed'].forEach(col => {
+      const column = document.getElementById(col);
+      column.innerHTML = `<h5>${col}</h5>`;
+    });
+
+    tasks.forEach(task => {
+      if ((priorityFilter && task.priority !== priorityFilter) || (statusFilter && task.status !== statusFilter)) return;
+
+      const card = document.createElement('div');
+      card.className = 'task-card';
+      card.style.background = getStatusColor(task.status);
+      card.innerHTML = `
+        <strong>${task.name}</strong><br>
+        <small>${task.description || ''}</small><br>
+        <small>📅 ${task.due_date || '-'}</small><br>
+        <small>⏰ ${task.start_time || '-'} - ${task.end_time || '-'}</small><br>
+        <small>⚡ ${task.priority}</small><br>
+        <button class="btn btn-sm btn-light mt-1" onclick="deleteTask(${task.id})">
+          <i class="fas fa-trash-alt"></i>
+        </button>
+      `;
+      card.dataset.id = task.id;
+      document.getElementById(task.status).appendChild(card);
+    });
+  }
+
+  function addTask() {
+  const name = document.getElementById("taskName").value.trim();
+  if (!name) return toast("Task name is required", "danger");
+
+  const description = document.getElementById("taskDesc").value;
+  const due_date = document.getElementById("taskDate").value;
+  const start_time = document.getElementById("startTime").value;
+  const end_time = document.getElementById("endTime").value;
+  const priority = document.getElementById("taskPriority").value;
+  const status = document.getElementById("taskStatus").value;
+
+  fetch('/add_task', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, description, due_date, start_time, end_time, priority, status })
+  })
+    .then(res => res.json())
+    .then(data => {
+      if (data.message) {
+        toast(data.message);
+        document.getElementById("taskForm").reset();
+        fetchTasks();
+      } else {
+        toast(data.error || "Failed to add task", "danger");
+      }
+    })
+    .catch(() => toast("Error while adding task", "danger"));
+}
+
+  function deleteTask(id) {
+    fetch(`/delete_task/${id}`, { method: 'DELETE' })
+      .then(() => {
+        toast("Task deleted!", "danger");
+        fetchTasks();
+      });
+  }
+
+  function setupDragAndDrop() {
+    ['Assigned', 'In Process', 'Completed'].forEach(status => {
+      new Sortable(document.getElementById(status), {
+        group: 'shared',
+        animation: 150,
+        onEnd: (evt) => {
+          const taskId = evt.item.dataset.id;
+          const newStatus = evt.to.id;
+          fetch(`/update_task/${taskId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: newStatus })
+          }).then(() => {
+            toast("Task status updated!", "info");
+            fetchTasks();
+          });
+        }
+      });
+    });
+  }
+
+  window.onload = () => {
+    fetchTasks();
+    setupDragAndDrop();
+  };
+</script>
+</body>
+</html>

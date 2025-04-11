@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Voice Assistant</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      height: 100vh;
+      overflow: hidden;
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px;
+      color: white;
+    }
+
+    /* 🌈 Vibe Background */
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 100%;
+      z-index: -1;
+      background: linear-gradient(-45deg, #4e54c8, #8f94fb, #6a11cb, #2575fc , #a18cd1, #fbc2eb, #8fd3f4);
+      background-size: 600% 600%;
+      animation: vibe 30s ease infinite;
+    }
+
+    @keyframes vibe {
+      0% { background-position: 0% 50%; }
+      25% { background-position: 50% 50%; }
+      50% { background-position: 100% 50%; }
+      75% { background-position: 50% 0%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    h2 {
+      font-size: 2.5rem;
+      margin-bottom: 20px;
+      color: black;
+      text-shadow: none;
+    }
+
+    h3 {
+      margin-top: 30px;
+      font-size: 1.2rem;
+      color: black;
+    }
+
+    .glass {
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 20px;
+      width: 90%;
+      max-width: 800px;
+      margin-top: 20px;
+    }
+
+    button {
+      background: linear-gradient(145deg, #ffffff, #00ff80);
+      border: none;
+      color: #000;
+      padding: 12px 28px;
+      margin: 10px;
+      font-size: 14px;
+      font-weight: bold;
+      border-radius: 30px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
+    }
+
+    input[type="text"] {
+      width: 70%;
+      padding: 12px;
+      border-radius: 30px;
+      border: none;
+      outline: none;
+      margin-top: 15px;
+      margin-bottom: 10px;
+      font-size: 16px;
+      color: #ffffff91;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(5px);
+    }
+
+    input[type="text"]::placeholder {
+      color: #cccccc88;
+    }
+
+    pre {
+      max-height: 300px;
+      overflow-y: auto;
+      background: rgba(0, 0, 0, 0.4);
+      border-left: 4px solid #00ffe1;
+      padding: 15px;
+      border-radius: 12px;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .speak {
+      color: #ffff80;
+      animation: fadeIn 0.5s ease;
+    }
+
+    .command {
+      color: #80e9ff;
+      animation: fadeIn 0.5s ease;
+    }
+
+    .normal {
+      color: #e1ffb3;
+      animation: fadeIn 0.5s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background-color: #00ffe1;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h2>💡 AI Voice Assistant</h2>
+
+  <div class="glass">
+    <button onclick="startStream()">▶️ Start Assistant</button>
+    <button onclick="stopStream()">⏹️ Stop Assistant</button>
+
+    <pre id="output"></pre>
+
+    <h3>📝 Type a Command</h3>
+    <input type="text" id="typedInput" placeholder="e.g. Tell me a joke" />
+    <br />
+    <button onclick="sendTypedInput()">Submit</button>
+  </div>
+
+  <script>
+    let eventSource = null;
+
+    function startStream() {
+      if (eventSource) return;
+      eventSource = new EventSource('/stream');
+      const output = document.getElementById('output');
+      output.innerHTML = '';
+
+      eventSource.onmessage = function(event) {
+        const line = event.data;
+        let span = document.createElement("span");
+
+        if (line.startsWith("[SPEAKING]")) {
+          span.className = "speak";
+          span.textContent = "🗣️ " + line.replace("[SPEAKING]", "").trim();
+        } else if (line.startsWith("[COMMAND]")) {
+          span.className = "command";
+          span.textContent = "💬 " + line.replace("[COMMAND]", "").trim();
+        } else {
+          span.className = "normal";
+          span.textContent = line;
+        }
+
+        output.appendChild(span);
+        output.appendChild(document.createElement("br"));
+        output.scrollTop = output.scrollHeight;
+      };
+
+      eventSource.onerror = function() {
+        stopStream();
+      };
+    }
+
+    function stopStream() {
+      if (eventSource) {
+        eventSource.close();
+        eventSource = null;
+      }
+      const output = document.getElementById('output');
+      let stopLine = document.createElement("span");
+      stopLine.className = "speak";
+      stopLine.textContent = "🛑 [ Assistant stopped. ]";
+      output.appendChild(stopLine);
+      output.appendChild(document.createElement("br"));
+    }
+
+    function sendTypedInput() {
+      const input = document.getElementById('typedInput').value.trim();
+      if (!input) return;
+
+      fetch('/typed-input', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: input })
+      });
+
+      document.getElementById('typedInput').value = '';
+    }
+  </script>
+</body>
+</html>

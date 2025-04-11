@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>File Converter</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(270deg, #a18cd1, #fbc2eb, #84fab0, #8fd3f4);
+      background-size: 800% 800%;
+      animation: backgroundShift 20s ease infinite, fadeIn 1.2s ease-in;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    @keyframes backgroundShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .container {
+      background: white;
+      width: 100%;
+      max-width: 600px;
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+      animation: slideIn 1s ease-out;
+    }
+
+    @keyframes slideIn {
+      from { transform: scale(0.95); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    h2 {
+      text-align: center;
+      color: #6a1b9a;
+      margin-bottom: 25px;
+      font-size: 28px;
+      font-weight: 600;
+    }
+
+    label {
+      display: block;
+      margin: 15px 0 5px;
+      font-weight: 600;
+      color: #444;
+    }
+
+    .file-input,
+    .action-select,
+    .submit-btn {
+      width: 100%;
+      padding: 12px 15px;
+      border-radius: 10px;
+      font-size: 16px;
+      transition: all 0.3s ease;
+    }
+
+    .file-input,
+    .action-select {
+      border: 1.5px solid #ccc;
+      background-color: #f9f9f9;
+      color: #333;
+    }
+
+    .file-input:hover,
+    .action-select:hover {
+      border-color: #6a1b9a;
+    }
+
+    .submit-btn {
+      background: linear-gradient(to right, #8e2de2, #4a00e0);
+      border: none;
+      color: white;
+      font-weight: 600;
+      margin-top: 20px;
+      cursor: pointer;
+    }
+
+    .submit-btn:hover {
+      background: linear-gradient(to right, #4a00e0, #8e2de2);
+      transform: scale(1.02);
+    }
+
+    .info {
+      margin-top: 20px;
+      text-align: center;
+      color: #555;
+      font-size: 14px;
+      animation: fadeIn 2s ease;
+    }
+
+    @media (max-width: 700px) {
+      .container {
+        margin: 20px;
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>File Converter</h2>
+    <form action="/" method="post" enctype="multipart/form-data">
+      <label for="file">Upload File:</label>
+      <input type="file" name="file" class="file-input" multiple required />
+
+      <label for="action">Select Conversion Type:</label>
+      <select name="action" class="action-select" required>
+        <option value="pdf_to_word">PDF to Word</option>
+        <option value="word_to_pdf">Word to PDF</option>
+        <option value="txt_to_word">Text to Word</option>
+        <option value="txt_to_pdf">Text to PDF</option>
+        <option value="excel_to_pdf">Excel to PDF</option>
+        <option value="pptx_to_pdf">PowerPoint to PDF</option>
+        <option value="image_to_text">Image to Text</option>
+        <option value="csv_to_excel">CSV to Excel</option>
+        <option value="excel_to_csv">Excel to CSV</option>
+        <option value="html_to_pdf">HTML to PDF</option>
+        <option value="pdf_merge">Merge PDFs</option>
+        <option value="pdf_split">Split PDF</option>
+        <option value="pdf_to_txt">PDF to Text</option>
+        <option value="pdf_to_html">PDF to HTML</option>
+        <option value="pdf_to_csv">PDF to CSV</option>
+        <option value="pdf_to_excel">PDF to Excel</option>
+        <option value="pdf_to_pptx">PDF to PowerPoint</option>
+        <option value="pdf_to_image">PDF to Image</option>
+        <option value="image_to_pdf">Image to PDF</option>
+        <option value="add_watermark">Add Watermark</option>
+      </select>
+
+      <button type="submit" class="submit-btn">Convert File</button>
+    </form>
+    <p class="info">Supported formats: PDF, DOCX, TXT, CSV, HTML, JPG, PNG, XLSX, PPTX</p>
+  </div>
+</body>
+</html>

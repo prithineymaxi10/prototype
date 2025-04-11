@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Add Health Task</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style1.css') }}">
+    <style>
+        @keyframes bgFlow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(-45deg, #a18cd1, #fbc2eb, #84fab0, #8fd3f4);
+            background-size: 400% 400%;
+            animation: bgFlow 20s ease infinite;
+            color: #333;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 600px;
+            margin: 5rem auto;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+            animation: fadeInUp 1s ease;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            animation: slideDown 1s ease;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        label {
+            font-weight: bold;
+        }
+
+        input[type="text"], input[type="time"], textarea {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .btn {
+            background: #2980b9;
+            color: white;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: 0.3s ease;
+        }
+
+        .btn:hover {
+            background: #1f6391;
+            transform: scale(1.03);
+        }
+
+        a {
+            display: block;
+            text-align: center;
+            margin-top: 1.5rem;
+            color: #3498db;
+            text-decoration: none;
+            font-weight: bold;
+            animation: fadeIn 2s ease;
+        }
+
+        a:hover {
+            color: #21618c;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideDown {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Add New Task</h1>
+        <form method="POST">
+            <label>Task Title</label>
+            <input type="text" name="title" placeholder="e.g. Drink Water" required>
+
+            <label>Time</label>
+            <input type="time" name="time" required>
+
+            <label>Category</label>
+            <input type="text" name="category" placeholder="e.g. Hydration, Exercise" required>
+
+            <label>Notes</label>
+            <textarea name="notes" placeholder="Any additional details..."></textarea>
+
+            <button type="submit" class="btn">Add Task</button>
+        </form>
+        <a href="{{ url_for('dashboard') }}">← Back to Dashboard</a>
+    </div>
+</body>
+</html>

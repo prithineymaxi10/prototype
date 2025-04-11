@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.7.4/lottie.min.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(to right, #f8f9fa, #e9ecef);
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      padding: 40px;
+    }
+
+    .dashboard {
+      max-width: 1200px;
+      width: 100%;
+      background: white;
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+      animation: fadeIn 1.2s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    h1 {
+      text-align: center;
+      color: #212529;
+      font-size: 32px;
+      margin-bottom: 10px;
+    }
+
+    p {
+      text-align: center;
+      color: #6c757d;
+      margin-bottom: 40px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 20px;
+    }
+
+    .feature {
+      background: #f1f3f5;
+      padding: 20px;
+      border-radius: 16px;
+      text-align: center;
+      transition: transform 0.3s ease, background 0.3s ease;
+      cursor: pointer;
+    }
+
+    .feature:hover {
+      transform: translateY(-8px);
+    }
+
+    .icon {
+      height: 80px;
+      margin-bottom: 10px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .blue { background-color: #cce5ff; }
+    .green { background-color: #d4edda; }
+    .orange { background-color: #ffe5b4; }
+    .purple { background-color: #e6ccff; }
+    .teal { background-color: #b2f2bb; }
+    .pink { background-color: #ffd6e7; }
+    .yellow { background-color: #fff3bf; }
+    .gray { background-color: #dee2e6; }
+    .indigo { background-color: #d0bfff; }
+    .red { background-color: #ffccd5; }
+
+    .label {
+      font-size: 14px;
+      font-weight: 500;
+      color: #495057;
+    }
+
+    a.logout {
+      display: block;
+      margin-top: 40px;
+      text-align: center;
+      color: #ff4d4f;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    a.logout:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+<div class="dashboard">
+  <h1>Welcome, {{ username }}!</h1>
+  <p>You have securely logged in using biometric authentication.</p>
+
+  <div class="grid">
+    <div class="feature" onclick="location.href='/screen-time'">
+      <div class="icon blue" id="icon1"></div>
+      <div class="label">Screen Time & Distraction</div>
+    </div>
+    <div class="feature" onclick="location.href='/convert'">
+      <div class="icon green" id="icon2"></div>
+      <div class="label">Conversion</div>
+    </div>
+    <div class="feature" onclick="location.href='/assistant'">
+      <div class="icon orange" id="icon3"></div>
+      <div class="label">Locally Assistant</div>
+    </div>
+    <div class="feature" onclick="location.href='/docquery'">
+      <div class="icon purple" id="icon4"></div>
+      <div class="label">Docquery</div>
+    </div>
+    <div class="feature" onclick="location.href='/anomaly'">
+      <div class="icon teal" id="icon5"></div>
+      <div class="label">Anomaly Detection</div>
+    </div>
+    <div class="feature" onclick="location.href='/translate'">
+      <div class="icon pink" id="icon6"></div>
+      <div class="label">Translate</div>
+    </div>
+    <div class="feature" onclick="location.href='/visualize'">
+      <div class="icon yellow" id="icon7"></div>
+      <div class="label">Visualization</div>
+    </div>
+    <div class="feature" onclick="location.href='/health'">
+      <div class="icon gray" id="icon8"></div>
+      <div class="label">Health Track</div>
+    </div>
+    <div class="feature" onclick="location.href='/tasks'">
+      <div class="icon indigo" id="icon9"></div>
+      <div class="label">Task Scheduler</div>
+    </div>
+    <div class="feature" onclick="location.href='/games'">
+      <div class="icon red" id="icon10"></div>
+      <div class="label">Games</div>
+    </div>
+  </div>
+
+  <a href="{{ url_for('logout') }}" class="logout">Logout</a>
+</div>
+
+<script>
+  const animations = [
+    'https://assets10.lottiefiles.com/packages/lf20_YXD37q.json',
+    'https://assets10.lottiefiles.com/packages/lf20_rTP3gU.json',
+    'https://assets6.lottiefiles.com/packages/lf20_zrqthn6o.json',
+    'https://assets10.lottiefiles.com/packages/lf20_49rdyysj.json',
+    'https://assets9.lottiefiles.com/packages/lf20_1pxqjqps.json',
+    'https://assets4.lottiefiles.com/packages/lf20_yoyz0zlw.json',
+    'https://assets1.lottiefiles.com/packages/lf20_gflulzqr.json',
+    'https://assets10.lottiefiles.com/packages/lf20_qp1q7mct.json',
+    'https://assets2.lottiefiles.com/packages/lf20_jchkrzlx.json',
+    'https://assets6.lottiefiles.com/packages/lf20_puciaact.json'
+  ];
+
+  animations.forEach((url, i) => {
+    const container = document.getElementById(`icon${i + 1}`);
+    if (container) {
+      lottie.loadAnimation({
+        container: container,
+        renderer: 'svg',
+        loop: true,
+        autoplay: true,
+        path: url
+      });
+    }
+  });
+</script>
+</body>
+</html>

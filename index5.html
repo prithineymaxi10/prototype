@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart File Analyzer</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            animation: vibe 15s infinite;
+            background: linear-gradient(270deg, #a18cd1, #fbc2eb, #84fab0, #8fd3f4);
+            background-size: 800% 800%;
+            padding: 20px;
+            color: black;
+        }
+
+        @keyframes vibe {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .container {
+            max-width: 650px;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+            animation: fadeIn 1s ease-out;
+            color: black;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .fade-in {
+            animation: fadeIn 1s ease-out;
+        }
+
+        .btn-custom {
+            transition: all 0.3s ease;
+        }
+
+        .btn-custom:hover {
+            transform: scale(1.03);
+            box-shadow: 0px 0px 10px #aaa;
+        }
+
+        h2, h4, label {
+            color: black;
+        }
+
+        input[type="file"]::file-selector-button {
+            color: black;
+            background-color:#ffffffcc;
+            border: 1px solid #ffcc80;
+            padding: 5px 10px;
+            border-radius: 5px;
+        }
+
+        input[type="file"] {
+            color: black;
+            background-color:#ffffffcc;
+            border: 1px solid #ffcc80;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2> Upload CSV or PDF</h2>
+        <input type="file" id="fileInput" class="form-control mb-3">
+        <button class="btn btn-primary w-100 btn-custom" onclick="uploadFile()"> Upload</button>
+        
+        <div id="output" class="mt-4 hidden fade-in">
+            <h4> Analysis Result</h4>
+            <pre id="outputText"></pre>
+        </div>
+        
+        <div id="fixAnomalies" class="mt-4 hidden fade-in">
+            <h4> Fix Anomalies</h4>
+            <div id="anomalyInputs"></div>
+            <button class="btn btn-success mt-3 w-100 btn-custom" onclick="submitFixes()">Apply Fixes</button>
+        </div>
+        
+        <div id="downloadSection" class="mt-4 hidden text-center fade-in">
+            <h4> Download Cleaned File</h4>
+            <a id="downloadLink" class="btn btn-warning btn-custom" href="#">Download</a>
+        </div>
+    </div>
+
+    <script>
+        function uploadFile() {
+            var file = document.getElementById("fileInput").files[0];
+            if (!file) {
+                alert("Please select a file first");
+                return;
+            }
+
+            $("#fixAnomalies").addClass("hidden");
+            $("#downloadSection").addClass("hidden");
+
+            var formData = new FormData();
+            formData.append("file", file);
+
+            $.ajax({
+                url: "/upload",
+                type: "POST",
+                data: formData,
+                contentType: false,
+                processData: false,
+                success: function(response) {
+                    $("#outputText").text(JSON.stringify(response, null, 2));
+                    $("#output").removeClass("hidden");
+
+                    if (response.anomalies && Object.keys(response.anomalies).length > 0 && Object.values(response.anomalies).some(arr => arr.length > 0)) {
+                        $("#fixAnomalies").removeClass("hidden");
+                        var anomalyInputs = "";
+                        for (var col in response.recommendations) {
+                            anomalyInputs += `
+                                <div class='mb-2'>
+                                    <label>${col}</label>
+                                    <input type='text' id='${col}' class='form-control' value='${response.recommendations[col]}'>
+                                </div>`;
+                        }
+                        $("#anomalyInputs").html(anomalyInputs);
+                        $("#fixAnomalies").data("file_path", response.file_path);
+                    } else {
+                        $("#fixAnomalies").addClass("hidden");
+                    }
+                },
+                error: function() {
+                    alert("Error uploading file");
+                }
+            });
+        }
+
+        function submitFixes() {
+            var userInputs = {};
+            $("#anomalyInputs input").each(function () {
+                userInputs[$(this).attr("id")] = $(this).val();
+            });
+
+            var filePath = $("#fixAnomalies").data("file_path");
+
+            $.ajax({
+                url: "/fix_anomalies",
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify({ file_path: filePath, user_inputs: userInputs }),
+                success: function (response) {
+                    alert(response.message);
+                    $("#downloadLink").attr("href", response.download_url);
+                    $("#downloadSection").removeClass("hidden");
+                },
+                error: function () {
+                    alert("Error fixing anomalies");
+                }
+            });
+        }
+    </script>
+</body>
+</html>

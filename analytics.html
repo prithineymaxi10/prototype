@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Wellness Analytics Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Animations and Styles */
+        @keyframes backgroundMotion {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideDown {
+            from { transform: translateY(-30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes zoomIn {
+            from { transform: scale(0.95); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes bounceIn {
+            0% { transform: scale(0.3); opacity: 0; }
+            50% { transform: scale(1.05); opacity: 1; }
+            70% { transform: scale(0.9); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes pulseButton {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(-45deg, #4e54c8, #8f94fb, #6a11cb, #2575fc , #a18cd1, #fbc2eb, #8fd3f4);
+            background-size: 400% 400%;
+            animation: backgroundMotion 20s ease infinite;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+
+        h2 {
+            text-align: center;
+            padding-top: 2rem;
+            color: #fff;
+            animation: slideDown 1s ease;
+        }
+
+        .chart-container {
+            width: 90%;
+            max-width: 1000px;
+            margin: 2rem auto;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 2rem;
+            border-radius: 18px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            animation: zoomIn 0.8s ease;
+        }
+
+        canvas {
+            margin-top: 10px;
+        }
+
+        .back-btn {
+            display: block;
+            width: max-content;
+            margin: 2rem auto 1rem;
+            background: #3498db;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: bold;
+            text-align: center;
+            transition: 0.3s ease;
+            animation: fadeIn 2s ease;
+        }
+
+        .back-btn:hover {
+            background: #2c80b4;
+            transform: scale(1.05);
+        }
+
+        .task-popup {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.97);
+            border: 1px solid #ccc;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.25);
+            z-index: 9999;
+            animation: bounceIn 0.7s ease forwards;
+        }
+
+        .task-popup h4 {
+            margin: 0 0 10px;
+            font-size: 1.1rem;
+        }
+
+        .task-popup button {
+            padding: 10px 18px;
+            border: none;
+            background-color: #28a745;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 15px;
+            animation: pulseButton 2s infinite;
+            transition: 0.2s ease;
+        }
+
+        .task-popup button:hover {
+            background-color: #218838;
+            transform: scale(1.1);
+        }
+    </style>
+</head>
+<body>
+    <h2>📊 Weekly Wellness Analytics</h2>
+
+    <div class="chart-container">
+        <canvas id="hydrationChart"></canvas>
+    </div>
+
+    <div class="chart-container">
+        <canvas id="comparisonChart"></canvas>
+    </div>
+
+    <div class="chart-container">
+        <canvas id="wellnessScoreChart"></canvas>
+    </div>
+
+    <div class="chart-container">
+        <canvas id="productivityGauge"></canvas>
+    </div>
+
+    <div id="taskPopup" class="task-popup" style="display: none;">
+        <h4 id="taskText">Current Task: ...</h4>
+        <button onclick="markTaskDone()">Mark as Done</button>
+    </div>
+
+    <a class="back-btn" href="{{ url_for('dashboard') }}">← Back to Dashboard</a>
+
+    <script>
+        const hydrationCtx = document.getElementById('hydrationChart').getContext('2d');
+        const comparisonCtx = document.getElementById('comparisonChart').getContext('2d');
+        const wellnessScoreCtx = document.getElementById('wellnessScoreChart').getContext('2d');
+        const productivityGaugeCtx = document.getElementById('productivityGauge').getContext('2d');
+
+        let hydrationChart, comparisonChart, wellnessChart, productivityChart;
+
+        function initCharts(data) {
+            const labels = data.hydration.map(d => d.date);
+            const wellnessScores = labels.map((_, i) => {
+                const h = data.hydration[i]?.count || 0;
+                const m = data.missed[i]?.count || 0;
+                const c = data.completed[i]?.count || 0;
+                const total = c + m;
+                const percent_complete = total ? (c / total) * 100 : 0;
+                const hydration_percent = h ? (h / 4) * 100 : 0;
+                const missed_percent = total ? (m / total) * 100 : 0;
+                return Math.round((0.6 * percent_complete) + (0.3 * hydration_percent) - (0.1 * missed_percent));
+            });
+
+            const lastScore = wellnessScores[wellnessScores.length - 1];
+            let productivity = lastScore >= 85 ? "Excellent"
+                            : lastScore >= 70 ? "Good"
+                            : lastScore >= 50 ? "Average"
+                            : "Needs Improvement";
+
+            if (hydrationChart) hydrationChart.destroy();
+            if (comparisonChart) comparisonChart.destroy();
+            if (wellnessChart) wellnessChart.destroy();
+            if (productivityChart) productivityChart.destroy();
+
+            hydrationChart = new Chart(hydrationCtx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Hydration Count',
+                        data: data.hydration.map(d => d.count),
+                        borderColor: 'blue',
+                        backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: { animation: { duration: 1000 } }
+            });
+
+            comparisonChart = new Chart(comparisonCtx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Completed Tasks',
+                            data: data.completed.map(d => d.count),
+                            backgroundColor: '#28a745'
+                        },
+                        {
+                            label: 'Missed Tasks',
+                            data: data.missed.map(d => d.count),
+                            backgroundColor: '#dc3545'
+                        },
+                        {
+                            label: 'Hydration',
+                            data: data.hydration.map(d => d.count),
+                            backgroundColor: '#007bff'
+                        }
+                    ]
+                },
+                options: { animation: { duration: 1000 } }
+            });
+
+            wellnessChart = new Chart(wellnessScoreCtx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Wellness Score',
+                        data: wellnessScores,
+                        borderColor: '#6f42c1',
+                        backgroundColor: 'rgba(111, 66, 193, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: { animation: { duration: 1000 } }
+            });
+
+            productivityChart = new Chart(productivityGaugeCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Score', 'Remaining'],
+                    datasets: [{
+                        data: [lastScore, 100 - lastScore],
+                        backgroundColor: ['#17a2b8', '#e9ecef']
+                    }]
+                },
+                options: {
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: `Current Productivity: ${productivity} (${lastScore}%)`
+                        },
+                        tooltip: { enabled: false }
+                    },
+                    cutout: '70%',
+                    animation: { duration: 1000 }
+                }
+            });
+        }
+
+        async function fetchChartData() {
+            const response = await fetch('/api/chart-data');
+            const data = await response.json();
+            initCharts(data);
+        }
+
+        async function pollTask() {
+            try {
+                const response = await fetch('/get_current_task');
+                const data = await response.json();
+                if (data && data.task) {
+                    document.getElementById('taskText').textContent = "Current Task: " + data.task;
+                    document.getElementById('taskPopup').style.display = 'block';
+                } else {
+                    document.getElementById('taskPopup').style.display = 'none';
+                }
+            } catch (err) {
+                console.error('Task polling error:', err);
+            }
+        }
+
+        async function markTaskDone() {
+            try {
+                await fetch('/mark_done', { method: 'POST' });
+                document.getElementById('taskPopup').style.display = 'none';
+                fetchChartData();
+            } catch (err) {
+                console.error('Mark done error:', err);
+            }
+        }
+
+        fetchChartData();
+        pollTask();
+        setInterval(fetchChartData, 10000);
+        setInterval(pollTask, 10000);
+    </script>
+</body>
+</html>

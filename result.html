@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Result</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #f9f9f9;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .result-box {
+            background: white;
+            padding: 30px;
+            max-width: 500px;
+            margin: auto;
+            border-radius: 12px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        }
+
+        h2 {
+            color: #4CAF50;
+        }
+
+        img {
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            margin-top: 15px;
+        }
+
+        .button {
+            margin-top: 20px;
+            background-color: #2196F3;
+            color: white;
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .button:hover {
+            background-color: #0b7dda;
+        }
+    </style>
+</head>
+<body>
+    <div class="result-box">
+        <h2>Similarity Score: {{ score }}</h2>
+        <h3>Your Drawing:</h3>
+        <img src="{{ url_for('static', filename='uploads/' + drawing_file) }}" width="300">
+        <br><br>
+        <a class="button" href="/">Try Again</a>
+    </div>
+</body>
+</html>
